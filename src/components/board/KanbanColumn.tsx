@@ -1,0 +1,76 @@
+import { Task, TaskStatus } from '@/store/appStore';
+import { TaskCard } from './TaskCard';
+import { statusConfig } from '@/lib/taskUtils';
+import { cn } from '@/lib/utils';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Droppable, Draggable } from '@hello-pangea/dnd';
+
+interface KanbanColumnProps {
+  status: TaskStatus;
+  tasks: Task[];
+}
+
+export const KanbanColumn = ({ status, tasks }: KanbanColumnProps) => {
+  const config = statusConfig[status];
+
+  return (
+    <div className="flex flex-col min-w-[300px] max-w-[300px]">
+      {/* Column Header */}
+      <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center gap-2">
+          <div className={cn('h-3 w-3 rounded-full', config.color)} />
+          <h3 className="font-medium text-sm text-foreground">{config.label}</h3>
+          <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+            {tasks.length}
+          </span>
+        </div>
+        <Button variant="ghost" size="icon" className="h-7 w-7">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Column Content */}
+      <Droppable droppableId={status}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={cn(
+              'flex-1 space-y-3 p-2 rounded-xl transition-colors min-h-[200px]',
+              snapshot.isDraggingOver
+                ? 'bg-primary/5 border-2 border-dashed border-primary/30'
+                : 'bg-muted/30'
+            )}
+          >
+            {tasks.map((task, index) => (
+              <Draggable key={task.id} draggableId={task.id} index={index}>
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                  >
+                    <TaskCard task={task} isDragging={snapshot.isDragging} />
+                  </div>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+
+            {/* Empty State */}
+            {tasks.length === 0 && !snapshot.isDraggingOver && (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <p className="text-sm text-muted-foreground">No tasks</p>
+                <Button variant="ghost" size="sm" className="mt-2 gap-1">
+                  <Plus className="h-3 w-3" />
+                  Add task
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </Droppable>
+    </div>
+  );
+};
