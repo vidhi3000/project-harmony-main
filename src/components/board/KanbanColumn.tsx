@@ -9,13 +9,14 @@ import { Droppable, Draggable } from '@hello-pangea/dnd';
 interface KanbanColumnProps {
   status: TaskStatus;
   tasks: Task[];
+  searchQuery: string;
 }
 
-export const KanbanColumn = ({ status, tasks }: KanbanColumnProps) => {
+export const KanbanColumn = ({ status, tasks, searchQuery }: KanbanColumnProps) => {
   const config = statusConfig[status];
 
   return (
-    <div className="flex flex-col min-w-[300px] max-w-[300px]">
+    <div className="flex flex-col min-w-[250px] md:min-w-[300px] max-w-[250px] md:max-w-[300px] snap-start">
       {/* Column Header */}
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
@@ -61,11 +62,15 @@ export const KanbanColumn = ({ status, tasks }: KanbanColumnProps) => {
             {/* Empty State */}
             {tasks.length === 0 && !snapshot.isDraggingOver && (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-sm text-muted-foreground">No tasks</p>
-                <Button variant="ghost" size="sm" className="mt-2 gap-1">
-                  <Plus className="h-3 w-3" />
-                  Add task
-                </Button>
+                <p className="text-sm text-muted-foreground">
+                  {searchQuery ? 'No tasks match your search' : 'No tasks'}
+                </p>
+                {!searchQuery && (
+                  <Button variant="ghost" size="sm" className="mt-2 gap-1">
+                    <Plus className="h-3 w-3" />
+                    Add task
+                  </Button>
+                )}
               </div>
             )}
           </div>

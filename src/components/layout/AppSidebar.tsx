@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/appStore';
 import { useTheme } from '@/hooks/useTheme';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   LayoutDashboard,
   FolderKanban,
@@ -29,16 +30,32 @@ const navItems = [
 
 export const AppSidebar = () => {
   const location = useLocation();
-  const { sidebarOpen, toggleSidebar, currentUser } = useAppStore();
+  const { sidebarOpen, toggleSidebar, setSidebarOpen, currentUser } = useAppStore();
   const { theme, toggleTheme } = useTheme();
+  const isMobile = useIsMobile();
 
   return (
-    <aside
-      className={cn(
-        'fixed left-0 top-0 z-40 h-screen flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out',
-        sidebarOpen ? 'w-64' : 'w-20'
+    <>
+      {/* Mobile Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
-    >
+
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-40 h-screen flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out',
+          isMobile
+            ? sidebarOpen
+              ? 'w-64 translate-x-0'
+              : 'w-64 -translate-x-full'
+            : sidebarOpen
+            ? 'w-64'
+            : 'w-20'
+        )}
+      >
       {/* Header */}
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         <Link to="/dashboard" className="flex items-center gap-3">
@@ -69,6 +86,7 @@ export const AppSidebar = () => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={isMobile ? () => setSidebarOpen(false) : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                 isActive
@@ -169,5 +187,6 @@ export const AppSidebar = () => {
         </div>
       </div>
     </aside>
+    </>
   );
 };

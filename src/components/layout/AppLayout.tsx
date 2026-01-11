@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { useAppStore } from '@/store/appStore';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 interface AppLayoutProps {
@@ -12,6 +13,7 @@ interface AppLayoutProps {
 
 export const AppLayout = ({ children, title, subtitle }: AppLayoutProps) => {
   const { sidebarOpen } = useAppStore();
+  const isMobile = useIsMobile();
 
   return (
     <div className="min-h-screen bg-background">
@@ -19,7 +21,11 @@ export const AppLayout = ({ children, title, subtitle }: AppLayoutProps) => {
       <div
         className={cn(
           'transition-all duration-300 ease-in-out',
-          sidebarOpen ? 'ml-64' : 'ml-20'
+          isMobile
+            ? 'ml-0'
+            : sidebarOpen
+            ? 'ml-64'
+            : 'ml-20'
         )}
       >
         <AppHeader title={title} subtitle={subtitle} />

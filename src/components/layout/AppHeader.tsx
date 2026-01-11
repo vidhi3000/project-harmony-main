@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Search, Plus } from 'lucide-react';
+import { Bell, Search, Plus, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,6 +15,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useAppStore, Notification, TaskPriority, TaskStatus, Task, Project } from '@/store/appStore';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { formatRelativeTime } from '@/lib/taskUtils';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,8 @@ interface AppHeaderProps {
 }
 
 export const AppHeader = ({ title, subtitle }: AppHeaderProps) => {
-  const { notifications, markNotificationRead, markAllNotificationsRead, addTask, projects, tasks } = useAppStore();
+  const { notifications, markNotificationRead, markAllNotificationsRead, addTask, projects, tasks, setSidebarOpen } = useAppStore();
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
@@ -95,9 +97,21 @@ export const AppHeader = ({ title, subtitle }: AppHeaderProps) => {
   return (
     <>
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-xl px-6">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-          {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+        <div className="flex items-center gap-3">
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          )}
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

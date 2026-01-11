@@ -57,11 +57,11 @@ export const KanbanBoard = ({ searchQuery, selectedProject, filters }: KanbanBoa
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-180px)]">
+      <div className="flex gap-2 md:gap-4 overflow-x-auto pb-4 h-[calc(100vh-180px)] scroll-smooth snap-x">
         {columns.map((status) => {
           const columnTasks = filteredTasks.filter((task) => task && task.status === status);
           return (
-            <KanbanColumn key={status} status={status} tasks={columnTasks} />
+            <KanbanColumn key={status} status={status} tasks={columnTasks} searchQuery={searchQuery} />
           );
         })}
       </div>
