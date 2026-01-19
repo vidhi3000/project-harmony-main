@@ -254,7 +254,7 @@ const Auth = () => {
                 JD
               </div>
               <div>
-                <div className="font-medium text-primary-foreground">Jane Doe</div>
+                <div className="font-medium text-primary-foreground">Vidhi Maharwade </div>
                 <div className="text-sm text-primary-foreground/70">CTO at TechStart</div>
               </div>
             </div>
