@@ -147,6 +147,7 @@ interface AppState {
   currentUser: User;
   theme: 'light' | 'dark';
   sidebarOpen: boolean;
+  users: User[];
   projects: Project[];
   tasks: Task[];
   notifications: Notification[];
@@ -163,13 +164,18 @@ interface AppState {
   deleteProject: (projectId: string) => void;
   markNotificationRead: (notificationId: string) => void;
   markAllNotificationsRead: () => void;
+  addNotification: (notification: Omit<Notification, 'id' | 'read' | 'createdAt'>) => void;
   updateCurrentUser: (updates: Partial<User>) => void;
+  addUser: (user: Omit<User, 'id'>) => void;
+  updateUser: (userId: string, updates: Partial<User>) => void;
+  removeUser: (userId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
   currentUser: dummyUsers[0],
   theme: 'dark',
   sidebarOpen: true,
+  users: dummyUsers,
   projects: dummyProjects,
   tasks: dummyTasks,
   notifications: dummyNotifications,
@@ -178,17 +184,73 @@ export const useAppStore = create<AppState>((set) => ({
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   
-  updateTask: (taskId, updates) => set((state) => ({
-    tasks: state.tasks.map((task) =>
-      task.id === taskId ? { ...task, ...updates, updatedAt: new Date().toISOString() } : task
-    ),
-  })),
+  updateTask: (taskId, updates) => set((state) => {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task) return state;
+
+    const updatedTask = { ...task, ...updates, updatedAt: new Date().toISOString() };
+
+    // Generate notifications for specific updates
+    let notifications = [...state.notifications];
+
+    // Check for assignee change
+    if (updates.assignee && (!task.assignee || updates.assignee.id !== task.assignee.id)) {
+      notifications = [{
+        id: `n${Date.now()}`,
+        type: 'task_assigned' as const,
+        title: 'Task assigned',
+        message: `"${task.title}" has been assigned to ${updates.assignee.name}`,
+        read: false,
+        createdAt: new Date().toISOString(),
+        link: '/board',
+      }, ...notifications];
+    }
+
+    // Check for due date change
+    if (updates.dueDate !== undefined && updates.dueDate !== task.dueDate) {
+      notifications = [{
+        id: `n${Date.now()}`,
+        type: 'deadline' as const,
+        title: 'Task deadline updated',
+        message: `"${task.title}" deadline changed to ${new Date(updates.dueDate).toLocaleDateString()}`,
+        read: false,
+        createdAt: new Date().toISOString(),
+        link: '/board',
+      }, ...notifications];
+    }
+
+    return {
+      tasks: state.tasks.map((t) =>
+        t.id === taskId ? updatedTask : t
+      ),
+      notifications,
+    };
+  }),
   
-  moveTask: (taskId, newStatus) => set((state) => ({
-    tasks: state.tasks.map((task) =>
-      task.id === taskId ? { ...task, status: newStatus, updatedAt: new Date().toISOString() } : task
-    ),
-  })),
+  moveTask: (taskId, newStatus) => set((state) => {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task || task.status === newStatus) return state;
+
+    const updatedTask = { ...task, status: newStatus, updatedAt: new Date().toISOString() };
+
+    // Generate notification for status change
+    const notifications = [{
+      id: `n${Date.now()}`,
+      type: 'project_update' as const,
+      title: 'Task status updated',
+      message: `"${task.title}" status changed to ${newStatus.replace('_', ' ')}`,
+      read: false,
+      createdAt: new Date().toISOString(),
+      link: '/board',
+    }, ...state.notifications];
+
+    return {
+      tasks: state.tasks.map((t) =>
+        t.id === taskId ? updatedTask : t
+      ),
+      notifications,
+    };
+  }),
   
   markNotificationRead: (notificationId) => set((state) => ({
     notifications: state.notifications.map((n) =>
@@ -200,14 +262,39 @@ export const useAppStore = create<AppState>((set) => ({
     notifications: state.notifications.map((n) => ({ ...n, read: true })),
   })),
 
-  addTask: (task) => set((state) => ({
-    tasks: [...state.tasks, {
+  addNotification: (notification) => set((state) => ({
+    notifications: [{
+      ...notification,
+      id: `n${Date.now()}`,
+      read: false,
+      createdAt: new Date().toISOString(),
+    }, ...state.notifications],
+  })),
+
+  addTask: (task) => set((state) => {
+    const newTask = {
       ...task,
       id: `t${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }],
-  })),
+    };
+
+    // Generate notification for new task creation
+    const notifications = [{
+      id: `n${Date.now()}`,
+      type: 'project_update' as const,
+      title: 'New task created',
+      message: `Task "${task.title}" has been created`,
+      read: false,
+      createdAt: new Date().toISOString(),
+      link: '/board',
+    }, ...state.notifications];
+
+    return {
+      tasks: [...state.tasks, newTask],
+      notifications,
+    };
+  }),
 
   deleteTask: (taskId) => set((state) => ({
     tasks: state.tasks.filter((task) => task.id !== taskId),
@@ -233,5 +320,22 @@ export const useAppStore = create<AppState>((set) => ({
 
   updateCurrentUser: (updates) => set((state) => ({
     currentUser: { ...state.currentUser, ...updates },
+  })),
+
+  addUser: (user) => set((state) => ({
+    users: [...state.users, {
+      ...user,
+      id: `u${Date.now()}`,
+    }],
+  })),
+
+  updateUser: (userId, updates) => set((state) => ({
+    users: state.users.map((user) =>
+      user.id === userId ? { ...user, ...updates } : user
+    ),
+  })),
+
+  removeUser: (userId) => set((state) => ({
+    users: state.users.filter((user) => user.id !== userId),
   })),
 }));

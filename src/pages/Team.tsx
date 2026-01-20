@@ -1,5 +1,6 @@
 import { AppLayout } from '@/components/layout';
-import { useAppStore, dummyUsers } from '@/store/appStore';
+import { useAppStore } from '@/store/appStore';
+import type { User } from '@/store/appStore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,12 +24,30 @@ import { getInitials } from '@/lib/taskUtils';
 import { cn } from '@/lib/utils';
 import { Plus, Search, MoreHorizontal, Mail, Shield, Edit, Trash2, UserMinus } from 'lucide-react';
 import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const Team = () => {
-  const { currentUser } = useAppStore();
+  const { currentUser, users, addUser, updateUser, removeUser } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member');
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [editRole, setEditRole] = useState<'admin' | 'member' | 'viewer'>('member');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const filteredUsers = dummyUsers.filter(
+  const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -38,6 +57,37 @@ const Team = () => {
     admin: 'bg-primary/10 text-primary',
     member: 'bg-success/10 text-success',
     viewer: 'bg-muted text-muted-foreground',
+  };
+
+  const handleInviteMember = () => {
+    if (inviteName.trim() && inviteEmail.trim()) {
+      addUser({
+        name: inviteName.trim(),
+        email: inviteEmail.trim(),
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${inviteName.trim()}`,
+        role: inviteRole,
+      });
+      setInviteName('');
+      setInviteEmail('');
+      setInviteRole('member');
+      setInviteDialogOpen(false);
+    }
+  };
+
+  const handleEditRole = (userId: string, newRole: 'admin' | 'member' | 'viewer') => {
+    updateUser(userId, { role: newRole });
+    setEditDialogOpen(false);
+    setEditUserId(null);
+  };
+
+  const handleRemoveUser = (userId: string) => {
+    removeUser(userId);
+  };
+
+  const openEditDialog = (user: User) => {
+    setEditUserId(user.id);
+    setEditRole(user.role);
+    setEditDialogOpen(true);
   };
 
   return (
@@ -54,10 +104,106 @@ const Team = () => {
           />
         </div>
 
-        <Button className="gap-2 gradient-primary border-0 shadow-glow">
-          <Plus className="h-4 w-4" />
-          Invite Member
-        </Button>
+        <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 gradient-primary border-0 shadow-glow">
+              <Plus className="h-4 w-4" />
+              Invite Member
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Invite Team Member</DialogTitle>
+              <DialogDescription>
+                Add a new member to your team. They will receive an invitation email.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Enter full name"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="role" className="text-right">
+                  Role
+                </Label>
+                <Select value={inviteRole} onValueChange={(value: 'admin' | 'member' | 'viewer') => setInviteRole(value)}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit" onClick={handleInviteMember}>
+                Send Invitation
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Role Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Role</DialogTitle>
+              <DialogDescription>
+                Change the role for this team member.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-role" className="text-right">
+                  Role
+                </Label>
+                <Select value={editRole} onValueChange={(value: 'admin' | 'member' | 'viewer') => setEditRole(value)}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => editUserId && handleEditRole(editUserId, editRole)}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Team Stats */}
@@ -68,7 +214,7 @@ const Team = () => {
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground">
-              {dummyUsers.filter((u) => u.role === 'admin').length}
+              {users.filter((u) => u.role === 'admin').length}
             </p>
             <p className="text-sm text-muted-foreground">Admins</p>
           </div>
@@ -79,7 +225,7 @@ const Team = () => {
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground">
-              {dummyUsers.filter((u) => u.role === 'member').length}
+              {users.filter((u) => u.role === 'member').length}
             </p>
             <p className="text-sm text-muted-foreground">Members</p>
           </div>
@@ -90,7 +236,7 @@ const Team = () => {
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground">
-              {dummyUsers.filter((u) => u.role === 'viewer').length}
+              {users.filter((u) => u.role === 'viewer').length}
             </p>
             <p className="text-sm text-muted-foreground">Viewers</p>
           </div>
@@ -164,14 +310,14 @@ const Team = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openEditDialog(user)}>
                         <Edit className="h-4 w-4 mr-2" /> Edit Role
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Mail className="h-4 w-4 mr-2" /> Send Message
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveUser(user.id)}>
                         <UserMinus className="h-4 w-4 mr-2" /> Remove
                       </DropdownMenuItem>
                     </DropdownMenuContent>
