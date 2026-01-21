@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, Search, Plus, Menu } from 'lucide-react';
+import { Search, Plus, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -27,7 +27,7 @@ interface AppHeaderProps {
 }
 
 export const AppHeader = ({ title, subtitle }: AppHeaderProps) => {
-  const { notifications, markNotificationRead, markAllNotificationsRead, addTask, projects, tasks, setSidebarOpen } = useAppStore();
+  const { addTask, projects, tasks, setSidebarOpen } = useAppStore();
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
@@ -59,18 +59,9 @@ export const AppHeader = ({ title, subtitle }: AppHeaderProps) => {
     setSearchResults({ tasks: filteredTasks, projects: filteredProjects });
   }, [searchQuery, tasks, projects]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const getNotificationIcon = (type: Notification['type']) => {
-    const icons: Record<Notification['type'], string> = {
-      task_assigned: '📋',
-      comment: '💬',
-      mention: '@',
-      deadline: '⏰',
-      project_update: '📊',
-    };
-    return icons[type];
-  };
+
+
 
   const handleCreateTask = () => {
     if (!taskTitle.trim()) return;
@@ -203,70 +194,7 @@ export const AppHeader = ({ title, subtitle }: AppHeaderProps) => {
             <span className="hidden sm:inline">New Task</span>
           </Button>
 
-          {/* Notifications */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground animate-pulse-subtle">
-                    {unreadCount}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0">
-              <div className="flex items-center justify-between border-b border-border p-4">
-                <h3 className="font-semibold">Notifications</h3>
-                {unreadCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={markAllNotificationsRead}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Mark all read
-                  </Button>
-                )}
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No notifications
-                  </div>
-                ) : (
-                  notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      onClick={() => markNotificationRead(notification.id)}
-                      className={cn(
-                        'flex gap-3 p-4 border-b border-border/50 cursor-pointer transition-colors hover:bg-muted/50',
-                        !notification.read && 'bg-primary/5'
-                      )}
-                    >
-                      <span className="text-lg">{getNotificationIcon(notification.type)}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm font-medium truncate">{notification.title}</p>
-                          {!notification.read && (
-                            <Badge variant="secondary" className="bg-primary/10 text-primary text-[10px] px-1.5">
-                              New
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                          {notification.message}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          {formatRelativeTime(notification.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
+
         </div>
       </header>
 
