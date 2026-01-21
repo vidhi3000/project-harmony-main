@@ -96,6 +96,10 @@ export const TaskCard = ({ task, isDragging }: TaskCardProps) => {
     }
   };
 
+  const handleSetPriority = (priority: TaskPriority) => {
+    updateTask(task.id, { priority });
+  };
+
   const handleDeleteTask = () => {
     if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
       deleteTask(task.id);
@@ -145,6 +149,21 @@ export const TaskCard = ({ task, isDragging }: TaskCardProps) => {
                       <AvatarFallback className="text-[8px]">{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
                     {user.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Set priority...</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {Object.entries(priorityConfig).map(([key, config]) => (
+                  <DropdownMenuItem
+                    key={key}
+                    onClick={() => handleSetPriority(key as TaskPriority)}
+                    className={cn('flex items-center gap-2', config.color)}
+                  >
+                    <div className={cn('w-2 h-2 rounded-full', config.bgColor)} />
+                    {config.label}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuSubContent>
