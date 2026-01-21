@@ -1,6 +1,6 @@
 # FlowBoard
 
-A modern SaaS-style project management dashboard inspired by Linear and ClickUp.
+A modern SaaS-style project management dashboard 
 
 ## Features
 - Task management  
