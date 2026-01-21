@@ -75,7 +75,7 @@ export const AppHeader = ({ title, subtitle }: AppHeaderProps) => {
       priority: 'medium' as TaskPriority,
       projectId,
       tags: [],
-      dueDate: taskDueDate || undefined,
+      dueDate: taskDueDate ? new Date(taskDueDate) : undefined,
     });
 
     // Reset form

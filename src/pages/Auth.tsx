@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Github, Chrome } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -20,20 +22,63 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate authentication
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      if (isLogin) {
+        // Sign in
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-    toast({
-      title: isLogin ? 'Welcome back!' : 'Account created!',
-      description: isLogin
-        ? 'You have successfully signed in.'
-        : 'Your account has been created. Please check your email to verify.',
-    });
+        if (error) {
+          toast({
+            title: 'Sign in failed',
+            description: error.message,
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Welcome back!',
+            description: 'You have successfully signed in.',
+          });
+          navigate('/dashboard');
+        }
+      } else {
+        // Sign up
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+            },
+          },
+        });
+
+        if (error) {
+          toast({
+            title: 'Sign up failed',
+            description: error.message,
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Account created!',
+            description: 'Please check your email to verify your account.',
+          });
+          // Optionally switch to login mode after signup
+          setIsLogin(true);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    }
 
     setIsLoading(false);
-    
-    // Redirect to dashboard
-    window.location.href = '/dashboard';
   };
 
   return (

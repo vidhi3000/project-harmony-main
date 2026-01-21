@@ -1,341 +1,198 @@
 import { create } from 'zustand';
 
-export type UserRole = 'admin' | 'member' | 'viewer';
-
+// Types
 export interface User {
   id: string;
   name: string;
   email: string;
-  avatar: string;
-  role: UserRole;
-  timezone?: string;
+  avatar?: string;
 }
 
 export interface Project {
   id: string;
   name: string;
   description: string;
-  color: string;
-  icon: string;
-  status: 'active' | 'completed' | 'archived';
-  progress: number;
-  tasksCount: number;
-  completedTasks: number;
-  members: User[];
-  createdAt: string;
-  dueDate: string;
+  status: 'active' | 'completed' | 'on-hold';
+  icon?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
-
-export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'review' | 'done';
 
 export interface Task {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   status: TaskStatus;
   priority: TaskPriority;
+  assigneeId?: string;
   projectId: string;
-  assignee?: User;
-  dueDate?: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
+  tags?: string[];
+  dueDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
+
+export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'done';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface Notification {
   id: string;
-  type: 'task_assigned' | 'comment' | 'mention' | 'deadline' | 'project_update';
   title: string;
   message: string;
+  type: 'info' | 'warning' | 'error' | 'success';
   read: boolean;
-  createdAt: string;
-  link?: string;
+  createdAt: Date;
 }
 
-// Dummy Data
-export const dummyUsers: User[] = [
-  { id: '1', name: 'Vidhi', email: 'Vidhi@flowboard.io', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vidhi', role: 'admin', timezone: 'utc-8' },
-  { id: '2', name: 'Sarah Chen', email: 'sarah@flowboard.io', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah', role: 'member', timezone: 'utc-5' },
-  { id: '3', name: 'Khushi', email: 'Khushi@flowboard.io', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Khushi', role: 'member', timezone: 'utc+5.5' },
-  { id: '4', name: 'Emily Davis', email: 'emily@flowboard.io', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emily', role: 'viewer', timezone: 'utc+1' },
-  { id: '5', name: 'James Wilson', email: 'james@flowboard.io', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James', role: 'member', timezone: 'utc+0' },
-];
-
-export const dummyProjects: Project[] = [
-  {
-    id: 'p1',
-    name: 'Website Redesign',
-    description: 'Complete overhaul of the company website with new branding',
-    color: '#6366f1',
-    icon: '🎨',
-    status: 'active',
-    progress: 68,
-    tasksCount: 24,
-    completedTasks: 16,
-    members: [dummyUsers[0], dummyUsers[1], dummyUsers[2]],
-    createdAt: '2025-01-15',
-    dueDate: '2025-03-01',
-  },
-  {
-    id: 'p2',
-    name: 'Mobile App v2.0',
-    description: 'New features and performance improvements for the mobile application',
-    color: '#10b981',
-    icon: '📱',
-    status: 'active',
-    progress: 42,
-    tasksCount: 36,
-    completedTasks: 15,
-    members: [dummyUsers[1], dummyUsers[2], dummyUsers[4]],
-    createdAt: '2025-01-20',
-    dueDate: '2025-04-15',
-  },
-  {
-    id: 'p3',
-    name: 'API Integration',
-    description: 'Third-party API integrations for payment and analytics',
-    color: '#f59e0b',
-    icon: '🔗',
-    status: 'active',
-    progress: 85,
-    tasksCount: 18,
-    completedTasks: 15,
-    members: [dummyUsers[0], dummyUsers[4]],
-    createdAt: '2025-02-01',
-    dueDate: '2025-02-28',
-  },
-  {
-    id: 'p4',
-    name: 'Marketing Campaign',
-    description: 'Q1 2025 marketing campaign planning and execution',
-    color: '#ec4899',
-    icon: '📢',
-    status: 'active',
-    progress: 25,
-    tasksCount: 12,
-    completedTasks: 3,
-    members: [dummyUsers[2], dummyUsers[3]],
-    createdAt: '2025-02-10',
-    dueDate: '2025-05-01',
-  },
-];
-
-export const dummyTasks: Task[] = [
-  { id: 't1', title: 'Design new homepage layout', description: 'Create wireframes and mockups for the new homepage', status: 'done', priority: 'high', projectId: 'p1', assignee: dummyUsers[1], dueDate: '2025-02-15', tags: ['design', 'ui'], createdAt: '2025-01-16', updatedAt: '2025-02-10' },
-  { id: 't2', title: 'Implement responsive navigation', description: 'Build mobile-first responsive navigation component', status: 'in_progress', priority: 'high', projectId: 'p1', assignee: dummyUsers[2], dueDate: '2025-02-20', tags: ['frontend', 'mobile'], createdAt: '2025-01-18', updatedAt: '2025-02-12' },
-  { id: 't3', title: 'Setup CI/CD pipeline', description: 'Configure automated testing and deployment', status: 'review', priority: 'medium', projectId: 'p1', assignee: dummyUsers[0], dueDate: '2025-02-18', tags: ['devops'], createdAt: '2025-01-20', updatedAt: '2025-02-14' },
-  { id: 't4', title: 'User authentication flow', description: 'Implement login, signup, and password reset', status: 'todo', priority: 'urgent', projectId: 'p2', assignee: dummyUsers[4], dueDate: '2025-02-25', tags: ['backend', 'security'], createdAt: '2025-01-22', updatedAt: '2025-02-01' },
-  { id: 't5', title: 'Push notifications', description: 'Integrate Firebase for push notifications', status: 'backlog', priority: 'medium', projectId: 'p2', tags: ['mobile', 'backend'], createdAt: '2025-01-25', updatedAt: '2025-01-25' },
-  { id: 't6', title: 'Payment gateway integration', description: 'Integrate Stripe for payment processing', status: 'in_progress', priority: 'urgent', projectId: 'p3', assignee: dummyUsers[0], dueDate: '2025-02-22', tags: ['backend', 'payments'], createdAt: '2025-02-02', updatedAt: '2025-02-15' },
-  { id: 't7', title: 'Analytics dashboard', description: 'Build analytics overview with charts', status: 'todo', priority: 'high', projectId: 'p3', assignee: dummyUsers[4], dueDate: '2025-02-26', tags: ['frontend', 'data'], createdAt: '2025-02-05', updatedAt: '2025-02-10' },
-  { id: 't8', title: 'Create social media assets', description: 'Design graphics for social media campaigns', status: 'in_progress', priority: 'medium', projectId: 'p4', assignee: dummyUsers[2], dueDate: '2025-02-28', tags: ['design', 'marketing'], createdAt: '2025-02-11', updatedAt: '2025-02-16' },
-  { id: 't9', title: 'Write blog content', description: 'Create 5 blog posts for the campaign', status: 'backlog', priority: 'low', projectId: 'p4', tags: ['content', 'marketing'], createdAt: '2025-02-12', updatedAt: '2025-02-12' },
-  { id: 't10', title: 'Performance optimization', description: 'Optimize bundle size and loading speed', status: 'review', priority: 'high', projectId: 'p1', assignee: dummyUsers[2], dueDate: '2025-02-19', tags: ['frontend', 'performance'], createdAt: '2025-01-28', updatedAt: '2025-02-16' },
-];
-
-export const dummyNotifications: Notification[] = [
-  { id: 'n1', type: 'task_assigned', title: 'New task assigned', message: 'You have been assigned to "Payment gateway integration"', read: false, createdAt: '2025-02-16T10:30:00', link: '/board' },
-  { id: 'n2', type: 'comment', title: 'New comment', message: 'Sarah commented on "Design new homepage layout"', read: false, createdAt: '2025-02-16T09:15:00', link: '/board' },
-  { id: 'n3', type: 'deadline', title: 'Deadline approaching', message: '"Implement responsive navigation" is due in 2 days', read: true, createdAt: '2025-02-15T14:00:00', link: '/board' },
-  { id: 'n4', type: 'project_update', title: 'Project updated', message: 'Website Redesign progress updated to 68%', read: true, createdAt: '2025-02-15T11:00:00', link: '/projects' },
-  { id: 'n5', type: 'mention', title: 'You were mentioned', message: 'Marcus mentioned you in a comment', read: true, createdAt: '2025-02-14T16:30:00', link: '/board' },
-];
-
-// Zustand Store
-interface AppState {
-  currentUser: User;
+export interface AppState {
+  currentUser: User | null;
+  isAuthenticated: boolean;
   theme: 'light' | 'dark';
   sidebarOpen: boolean;
   users: User[];
   projects: Project[];
   tasks: Task[];
   notifications: Notification[];
-
-  setTheme: (theme: 'light' | 'dark') => void;
+  setTheme: (theme: AppState['theme']) => void;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
-  updateTask: (taskId: string, updates: Partial<Task>) => void;
-  moveTask: (taskId: string, newStatus: TaskStatus) => void;
+  setCurrentUser: (user: User | null) => void;
+  setAuthenticated: (authenticated: boolean) => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  deleteTask: (taskId: string) => void;
-  addProject: (project: Omit<Project, 'id' | 'createdAt'>) => void;
-  updateProject: (projectId: string, updates: Partial<Project>) => void;
-  deleteProject: (projectId: string) => void;
-  markNotificationRead: (notificationId: string) => void;
-  markAllNotificationsRead: () => void;
-  addNotification: (notification: Omit<Notification, 'id' | 'read' | 'createdAt'>) => void;
-  updateCurrentUser: (updates: Partial<User>) => void;
-  addUser: (user: Omit<User, 'id'>) => void;
-  updateUser: (userId: string, updates: Partial<User>) => void;
-  removeUser: (userId: string) => void;
+  updateTask: (id: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => void;
+  deleteTask: (id: string) => void;
 }
+
+// Dummy data
+export const dummyUsers: User[] = [
+  {
+    id: '1',
+    name: 'John Doe',
+    email: 'john@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+  },
+  {
+    id: '2',
+    name: 'Jane Smith',
+    email: 'jane@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane',
+  },
+  {
+    id: '3',
+    name: 'Bob Johnson',
+    email: 'bob@example.com',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
+  },
+];
+
+export const dummyProjects: Project[] = [
+  {
+    id: '1',
+    name: 'Project Harmony',
+    description: 'A project management application',
+    status: 'active',
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-15'),
+  },
+  {
+    id: '2',
+    name: 'Mobile App',
+    description: 'Cross-platform mobile application',
+    status: 'active',
+    createdAt: new Date('2024-02-01'),
+    updatedAt: new Date('2024-02-10'),
+  },
+];
+
+export const dummyTasks: Task[] = [
+  {
+    id: '1',
+    title: 'Design homepage',
+    description: 'Create wireframes and mockups for the homepage',
+    status: 'in-progress',
+    priority: 'high',
+    assigneeId: '1',
+    projectId: '1',
+    dueDate: new Date('2024-02-01'),
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-20'),
+  },
+  {
+    id: '2',
+    title: 'Implement authentication',
+    description: 'Set up user login and registration',
+    status: 'review',
+    priority: 'urgent',
+    assigneeId: '2',
+    projectId: '1',
+    dueDate: new Date('2024-01-25'),
+    createdAt: new Date('2024-01-10'),
+    updatedAt: new Date('2024-01-22'),
+  },
+  {
+    id: '3',
+    title: 'Write documentation',
+    description: 'Create user guide and API documentation',
+    status: 'todo',
+    priority: 'medium',
+    assigneeId: '3',
+    projectId: '2',
+    dueDate: new Date('2024-02-15'),
+    createdAt: new Date('2024-01-20'),
+    updatedAt: new Date('2024-01-20'),
+  },
+];
+
+export const dummyNotifications: Notification[] = [
+  {
+    id: '1',
+    title: 'Task Updated',
+    message: 'Your task "Design homepage" has been updated',
+    type: 'info',
+    read: false,
+    createdAt: new Date('2024-01-22'),
+  },
+  {
+    id: '2',
+    title: 'Project Deadline',
+    message: 'Project "Mobile App" is approaching its deadline',
+    type: 'warning',
+    read: true,
+    createdAt: new Date('2024-01-20'),
+  },
+];
 
 export const useAppStore = create<AppState>((set) => ({
   currentUser: dummyUsers[0],
+  isAuthenticated: true,
   theme: 'dark',
   sidebarOpen: true,
   users: dummyUsers,
   projects: dummyProjects,
   tasks: dummyTasks,
   notifications: dummyNotifications,
-  
+
   setTheme: (theme) => set({ theme }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
-  
-  updateTask: (taskId, updates) => set((state) => {
-    const task = state.tasks.find(t => t.id === taskId);
-    if (!task) return state;
-
-    const updatedTask = { ...task, ...updates, updatedAt: new Date().toISOString() };
-
-    // Generate notifications for specific updates
-    let notifications = [...state.notifications];
-
-    // Check for assignee change
-    if (updates.assignee && (!task.assignee || updates.assignee.id !== task.assignee.id)) {
-      notifications = [{
-        id: `n${Date.now()}`,
-        type: 'task_assigned' as const,
-        title: 'Task assigned',
-        message: `"${task.title}" has been assigned to ${updates.assignee.name}`,
-        read: false,
-        createdAt: new Date().toISOString(),
-        link: '/board',
-      }, ...notifications];
-    }
-
-    // Check for due date change
-    if (updates.dueDate !== undefined && updates.dueDate !== task.dueDate) {
-      notifications = [{
-        id: `n${Date.now()}`,
-        type: 'deadline' as const,
-        title: 'Task deadline updated',
-        message: `"${task.title}" deadline changed to ${new Date(updates.dueDate).toLocaleDateString()}`,
-        read: false,
-        createdAt: new Date().toISOString(),
-        link: '/board',
-      }, ...notifications];
-    }
-
-    return {
-      tasks: state.tasks.map((t) =>
-        t.id === taskId ? updatedTask : t
-      ),
-      notifications,
-    };
-  }),
-  
-  moveTask: (taskId, newStatus) => set((state) => {
-    const task = state.tasks.find(t => t.id === taskId);
-    if (!task || task.status === newStatus) return state;
-
-    const updatedTask = { ...task, status: newStatus, updatedAt: new Date().toISOString() };
-
-    // Generate notification for status change
-    const notifications = [{
-      id: `n${Date.now()}`,
-      type: 'project_update' as const,
-      title: 'Task status updated',
-      message: `"${task.title}" status changed to ${newStatus.replace('_', ' ')}`,
-      read: false,
-      createdAt: new Date().toISOString(),
-      link: '/board',
-    }, ...state.notifications];
-
-    return {
-      tasks: state.tasks.map((t) =>
-        t.id === taskId ? updatedTask : t
-      ),
-      notifications,
-    };
-  }),
-  
-  markNotificationRead: (notificationId) => set((state) => ({
-    notifications: state.notifications.map((n) =>
-      n.id === notificationId ? { ...n, read: true } : n
-    ),
-  })),
-  
-  markAllNotificationsRead: () => set((state) => ({
-    notifications: state.notifications.map((n) => ({ ...n, read: true })),
-  })),
-
-  addNotification: (notification) => set((state) => ({
-    notifications: [{
-      ...notification,
-      id: `n${Date.now()}`,
-      read: false,
-      createdAt: new Date().toISOString(),
-    }, ...state.notifications],
-  })),
-
-  addTask: (task) => set((state) => {
-    const newTask = {
+  setCurrentUser: (user) => set({ currentUser: user }),
+  setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
+  addTask: (task) => set((state) => ({
+    tasks: [...state.tasks, {
       ...task,
-      id: `t${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Generate notification for new task creation
-    const notifications = [{
-      id: `n${Date.now()}`,
-      type: 'project_update' as const,
-      title: 'New task created',
-      message: `Task "${task.title}" has been created`,
-      read: false,
-      createdAt: new Date().toISOString(),
-      link: '/board',
-    }, ...state.notifications];
-
-    return {
-      tasks: [...state.tasks, newTask],
-      notifications,
-    };
-  }),
-
-  deleteTask: (taskId) => set((state) => ({
-    tasks: state.tasks.filter((task) => task.id !== taskId),
-  })),
-
-  addProject: (project) => set((state) => ({
-    projects: [...state.projects, {
-      ...project,
-      id: `p${Date.now()}`,
-      createdAt: new Date().toISOString(),
+      id: Date.now().toString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }],
   })),
-
-  updateProject: (projectId, updates) => set((state) => ({
-    projects: state.projects.map((project) =>
-      project.id === projectId ? { ...project, ...updates } : project
+  updateTask: (id, updates) => set((state) => ({
+    tasks: state.tasks.map(task =>
+      task.id === id
+        ? { ...task, ...updates, updatedAt: new Date() }
+        : task
     ),
   })),
-
-  deleteProject: (projectId) => set((state) => ({
-    projects: state.projects.filter((project) => project.id !== projectId),
-  })),
-
-  updateCurrentUser: (updates) => set((state) => ({
-    currentUser: { ...state.currentUser, ...updates },
-  })),
-
-  addUser: (user) => set((state) => ({
-    users: [...state.users, {
-      ...user,
-      id: `u${Date.now()}`,
-    }],
-  })),
-
-  updateUser: (userId, updates) => set((state) => ({
-    users: state.users.map((user) =>
-      user.id === userId ? { ...user, ...updates } : user
-    ),
-  })),
-
-  removeUser: (userId) => set((state) => ({
-    users: state.users.filter((user) => user.id !== userId),
+  deleteTask: (id) => set((state) => ({
+    tasks: state.tasks.filter(task => task.id !== id),
   })),
 }));
