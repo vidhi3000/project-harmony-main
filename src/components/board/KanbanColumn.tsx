@@ -50,7 +50,7 @@ export const KanbanColumn = ({ status, tasks, searchQuery }: KanbanColumnProps) 
       priority: taskPriority,
       projectId,
       tags: [],
-      dueDate: taskDueDate || undefined,
+      dueDate: taskDueDate ? new Date(taskDueDate) : undefined,
     });
 
     // Reset form

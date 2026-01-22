@@ -1,5 +1,6 @@
 import { AppLayout } from '@/components/layout';
 import { KanbanBoard } from '@/components/board/KanbanBoard';
+import BoardSettingsSheet from '@/components/board/BoardSettingsSheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,12 +19,12 @@ import {
 } from '@/components/ui/sheet';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Filter, Search } from 'lucide-react';
+import { Filter, Search, Settings } from 'lucide-react';
 import { useState } from 'react';
-import { useAppStore } from '@/store/appStore';
+import { useAppStore, TaskStatus } from '@/store/appStore';
 
 const Board = () => {
-  const { projects } = useAppStore();
+  const { projects, users } = useAppStore();
   const [selectedProject, setSelectedProject] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({ priorities: [], assigneeIds: [] });
@@ -106,9 +107,9 @@ const Board = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Assignees</SelectItem>
-                      {projects.flatMap(project => project.members).filter((member, index, self) => self.findIndex(m => m.id === member.id) === index).map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.name}
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -118,6 +119,7 @@ const Board = () => {
             </SheetContent>
           </Sheet>
 
+          <BoardSettingsSheet />
 
         </div>
       </div>

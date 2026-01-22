@@ -3,8 +3,6 @@ import { useAppStore, TaskStatus } from '@/store/appStore';
 import { KanbanColumn } from './KanbanColumn';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 
-const columns: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'review', 'done'];
-
 interface KanbanBoardProps {
   searchQuery: string;
   selectedProject: string;
@@ -15,7 +13,8 @@ interface KanbanBoardProps {
 }
 
 export const KanbanBoard = ({ searchQuery, selectedProject, filters }: KanbanBoardProps) => {
-  const { tasks, moveTask } = useAppStore();
+  const { tasks, moveTask, boardSettings } = useAppStore();
+  const columns = boardSettings.visibleColumns;
 
   // Filter tasks based on search query, selected project, and additional filters
   const filteredTasks = tasks.filter((task) => {
@@ -30,7 +29,7 @@ export const KanbanBoard = ({ searchQuery, selectedProject, filters }: KanbanBoa
 
     const matchesPriority = filters.priorities.length === 0 || filters.priorities.includes(task.priority);
 
-    const matchesAssignee = filters.assigneeIds.length === 0 || (task.assignee && filters.assigneeIds.includes(task.assignee.id));
+    const matchesAssignee = filters.assigneeIds.length === 0 || (task.assigneeId && filters.assigneeIds.includes(task.assigneeId));
 
     return matchesSearch && matchesProject && matchesPriority && matchesAssignee;
   });

@@ -53,7 +53,7 @@ export const TaskCard = ({ task, isDragging }: TaskCardProps) => {
   const [editPriority, setEditPriority] = useState<TaskPriority>(task.priority);
   const [editAssignee, setEditAssignee] = useState(task.assigneeId || '');
   const [editDueDate, setEditDueDate] = useState(task.dueDate ? task.dueDate.toISOString().split('T')[0] : '');
-  const [editTags, setEditTags] = useState(task.tags.join(', '));
+  const [editTags, setEditTags] = useState(task.tags ? task.tags.join(', ') : '');
 
   const handleEditTask = () => {
     // Reset form with current task data
@@ -63,7 +63,7 @@ export const TaskCard = ({ task, isDragging }: TaskCardProps) => {
     setEditPriority(task.priority);
     setEditAssignee(task.assigneeId || '');
     setEditDueDate(task.dueDate ? task.dueDate.toISOString().split('T')[0] : '');
-    setEditTags(task.tags.join(', '));
+    setEditTags(task.tags ? task.tags.join(', ') : '');
     setIsEditOpen(true);
   };
 
@@ -188,7 +188,7 @@ export const TaskCard = ({ task, isDragging }: TaskCardProps) => {
         )}
 
         {/* Tags */}
-        {task.tags.length > 0 && (
+        {task.tags && task.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {task.tags.slice(0, 3).map((tag) => (
               <span
@@ -267,7 +267,7 @@ export const TaskCard = ({ task, isDragging }: TaskCardProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
                   <SelectItem value="done">Done</SelectItem>
                 </SelectContent>
               </Select>

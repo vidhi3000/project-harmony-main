@@ -14,6 +14,7 @@ export interface Project {
   description: string;
   status: 'active' | 'completed' | 'on-hold';
   icon?: string;
+  members?: User[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,7 +33,7 @@ export interface Task {
   updatedAt: Date;
 }
 
-export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'done';
+export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'review' | 'done';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface Notification {
@@ -44,6 +45,10 @@ export interface Notification {
   createdAt: Date;
 }
 
+export interface BoardSettings {
+  visibleColumns: TaskStatus[];
+}
+
 export interface AppState {
   currentUser: User | null;
   isAuthenticated: boolean;
@@ -53,11 +58,14 @@ export interface AppState {
   projects: Project[];
   tasks: Task[];
   notifications: Notification[];
+  boardSettings: BoardSettings;
   setTheme: (theme: AppState['theme']) => void;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   setCurrentUser: (user: User | null) => void;
   setAuthenticated: (authenticated: boolean) => void;
+  updateBoardSettings: (settings: Partial<BoardSettings>) => void;
+  moveTask: (taskId: string, newStatus: TaskStatus) => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateTask: (id: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => void;
   deleteTask: (id: string) => void;
@@ -91,6 +99,7 @@ export const dummyProjects: Project[] = [
     name: 'Project Harmony',
     description: 'A project management application',
     status: 'active',
+    members: dummyUsers.slice(0, 2),
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-15'),
   },
@@ -99,6 +108,7 @@ export const dummyProjects: Project[] = [
     name: 'Mobile App',
     description: 'Cross-platform mobile application',
     status: 'active',
+    members: dummyUsers.slice(1, 3),
     createdAt: new Date('2024-02-01'),
     updatedAt: new Date('2024-02-10'),
   },
@@ -109,7 +119,7 @@ export const dummyTasks: Task[] = [
     id: '1',
     title: 'Design homepage',
     description: 'Create wireframes and mockups for the homepage',
-    status: 'in-progress',
+    status: 'in_progress',
     priority: 'high',
     assigneeId: '1',
     projectId: '1',
@@ -171,12 +181,25 @@ export const useAppStore = create<AppState>((set) => ({
   projects: dummyProjects,
   tasks: dummyTasks,
   notifications: dummyNotifications,
+  boardSettings: {
+    visibleColumns: ['backlog', 'todo', 'in_progress', 'review', 'done'],
+  },
 
   setTheme: (theme) => set({ theme }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setCurrentUser: (user) => set({ currentUser: user }),
   setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
+  updateBoardSettings: (settings) => set((state) => ({
+    boardSettings: { ...state.boardSettings, ...settings },
+  })),
+  moveTask: (taskId, newStatus) => set((state) => ({
+    tasks: state.tasks.map(task =>
+      task.id === taskId
+        ? { ...task, status: newStatus, updatedAt: new Date() }
+        : task
+    ),
+  })),
   addTask: (task) => set((state) => ({
     tasks: [...state.tasks, {
       ...task,
