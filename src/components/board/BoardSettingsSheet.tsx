@@ -15,6 +15,7 @@ import { useAppStore, TaskStatus } from '@/store/appStore';
 const BoardSettingsSheet = () => {
   const { boardSettings, updateBoardSettings } = useAppStore();
   const [localVisibleColumns, setLocalVisibleColumns] = useState<TaskStatus[]>(boardSettings.visibleColumns);
+  const [open, setOpen] = useState(false);
 
   const allColumns: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'review', 'done'];
 
@@ -28,10 +29,11 @@ const BoardSettingsSheet = () => {
 
   const handleSave = () => {
     updateBoardSettings({ visibleColumns: localVisibleColumns });
+    setOpen(false);
   };
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="shrink-0">
           <Settings className="h-4 w-4" />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Task, TaskStatus, TaskPriority } from '@/store/appStore';
 import { useAppStore } from '@/store/appStore';
 import { TaskCard } from './TaskCard';
-import { statusConfig } from '@/lib/taskUtils';
+import { statusConfig, priorityConfig } from '@/lib/taskUtils';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';

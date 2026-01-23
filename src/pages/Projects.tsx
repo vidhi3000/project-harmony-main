@@ -63,6 +63,7 @@ const Projects = () => {
   });
 
   const handleNewProject = () => {
+    if (!currentUser) return;
     addProject({
       name: 'New Project',
       description: 'A new project description',

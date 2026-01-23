@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/appStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/lib/supabase';
 import {
   LayoutDashboard,
   FolderKanban,
@@ -33,6 +34,14 @@ export const AppSidebar = () => {
   const { sidebarOpen, toggleSidebar, setSidebarOpen, currentUser } = useAppStore();
   const { theme, toggleTheme } = useTheme();
   const isMobile = useIsMobile();
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <>
@@ -172,15 +181,14 @@ export const AppSidebar = () => {
             {sidebarOpen && (
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <Link to="/auth">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
-                    >
-                      <LogOut className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSignOut}
+                    className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent>Sign Out</TooltipContent>
               </Tooltip>

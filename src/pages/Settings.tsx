@@ -15,7 +15,7 @@ const Settings = () => {
   const { currentUser, updateCurrentUser } = useAppStore();
   const [name, setName] = useState(currentUser?.name || '');
   const [email, setEmail] = useState(currentUser?.email || '');
-  const [timezone, setTimezone] = useState(currentUser.timezone || 'utc-8');
+  const [timezone, setTimezone] = useState(currentUser.timezone || 'utc+5.5');
 
   const handleSaveProfile = () => {
     // Save timezone to user profile

@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { getInitials, priorityConfig } from '@/lib/taskUtils';
 import { cn } from '@/lib/utils';
-import { CalendarDays, MessageSquare, MoreHorizontal } from 'lucide-react';
+import { CalendarDays, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -220,10 +220,7 @@ export const TaskCard = ({ task, isDragging }: TaskCardProps) => {
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <MessageSquare className="h-3 w-3" />
-              <span>3</span>
-            </div>
+
           </div>
 
           {assignee && (
