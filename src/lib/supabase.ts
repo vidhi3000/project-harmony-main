@@ -12,6 +12,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Test connection
+supabase.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.error('Supabase connection test failed:', error)
+  } else {
+    console.log('Supabase connection test successful')
+  }
+}).catch((err) => {
+  console.error('Supabase connection error:', err)
+})
+
 // Clear corrupted sessions from localStorage
 const clearCorruptedSessions = () => {
   try {

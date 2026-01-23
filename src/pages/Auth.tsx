@@ -31,6 +31,7 @@ const Auth = () => {
         });
 
         if (error) {
+          console.error('Sign in error:', error);
           toast({
             title: 'Sign in failed',
             description: error.message,
@@ -44,35 +45,56 @@ const Auth = () => {
           navigate('/dashboard');
         }
       } else {
-        // Sign up
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          toast({
+            title: 'Invalid email',
+            description: 'Please enter a valid email address.',
+            variant: 'destructive',
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Sign up (assuming email confirmations are disabled in Supabase for development)
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            data: {
+              full_name: name,
+            },
           },
         });
 
         if (error) {
-          console.log('Signup error:', error);
+          console.error('Signup error:', error);
+          console.error('Error details:', {
+            message: error.message,
+            status: error.status,
+            name: error.name,
+          });
           toast({
             title: 'Sign up failed',
-            description: error.message,
+            description: `${error.message}. If this persists, check your email domain or Supabase settings.`,
             variant: 'destructive',
           });
         } else {
+          console.log('Signup successful, data:', data);
           toast({
             title: 'Account created!',
-            description: 'Please check your email to verify your account.',
+            description: 'Please check your email to verify your account before signing in.',
           });
           // Switch to login mode after signup
           setIsLogin(true);
         }
       }
     } catch (error) {
+      console.error('Unexpected auth error:', error);
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred.',
+        description: 'An unexpected error occurred. Please check your connection.',
         variant: 'destructive',
       });
     }
