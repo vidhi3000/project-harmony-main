@@ -146,45 +146,47 @@ export const AppSidebar = () => {
         </Tooltip>
 
         {/* User Profile */}
-        <div
-          className={cn(
-            'flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-sidebar-accent',
-            !sidebarOpen && 'justify-center'
-          )}
-        >
-          <Avatar className="h-9 w-9 border-2 border-sidebar-border">
-            <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-              {getInitials(currentUser.name)}
-            </AvatarFallback>
-          </Avatar>
-          {sidebarOpen && (
-            <div className="flex-1 min-w-0 animate-fade-in">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {currentUser.name}
-              </p>
-              <p className="text-xs text-muted-foreground truncate capitalize">
-                {currentUser.role}
-              </p>
-            </div>
-          )}
-          {sidebarOpen && (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Link to="/auth">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>Sign Out</TooltipContent>
-            </Tooltip>
-          )}
-        </div>
+        {currentUser && (
+          <div
+            className={cn(
+              'flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-sidebar-accent',
+              !sidebarOpen && 'justify-center'
+            )}
+          >
+            <Avatar className="h-9 w-9 border-2 border-sidebar-border">
+              <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {getInitials(currentUser.name)}
+              </AvatarFallback>
+            </Avatar>
+            {sidebarOpen && (
+              <div className="flex-1 min-w-0 animate-fade-in">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  {currentUser.name}
+                </p>
+                <p className="text-xs text-muted-foreground truncate capitalize">
+                  {currentUser.role}
+                </p>
+              </div>
+            )}
+            {sidebarOpen && (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Link to="/auth">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>Sign Out</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
       </div>
     </aside>
     </>

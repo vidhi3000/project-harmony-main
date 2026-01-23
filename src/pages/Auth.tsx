@@ -49,13 +49,12 @@ const Auth = () => {
           email,
           password,
           options: {
-            data: {
-              full_name: name,
-            },
+            emailRedirectTo: window.location.origin,
           },
         });
 
         if (error) {
+          console.log('Signup error:', error);
           toast({
             title: 'Sign up failed',
             description: error.message,
@@ -66,7 +65,7 @@ const Auth = () => {
             title: 'Account created!',
             description: 'Please check your email to verify your account.',
           });
-          // Optionally switch to login mode after signup
+          // Switch to login mode after signup
           setIsLogin(true);
         }
       }

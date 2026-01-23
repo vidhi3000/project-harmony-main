@@ -41,10 +41,10 @@ const Team = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [inviteName, setInviteName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member');
+  const [inviteRole, setInviteRole] = useState<string>('member');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [editUserId, setEditUserId] = useState<string | null>(null);
-  const [editRole, setEditRole] = useState<'admin' | 'member' | 'viewer'>('member');
+  const [editRole, setEditRole] = useState<string>('member');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const filteredUsers = users.filter(
@@ -148,7 +148,11 @@ const Team = () => {
                 <Label htmlFor="role" className="text-right">
                   Role
                 </Label>
-                <Select value={inviteRole} onValueChange={(value: 'admin' | 'member' | 'viewer') => setInviteRole(value)}>
+                <Select value={inviteRole} onValueChange={(value) => {
+                  if (value === 'admin' || value === 'member' || value === 'viewer') {
+                    setInviteRole(value);
+                  }
+                }}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
@@ -182,7 +186,7 @@ const Team = () => {
                 <Label htmlFor="edit-role" className="text-right">
                   Role
                 </Label>
-                <Select value={editRole} onValueChange={(value: 'admin' | 'member' | 'viewer') => setEditRole(value)}>
+                <Select value={editRole} onValueChange={(value) => setEditRole(value as 'admin' | 'member' | 'viewer')}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
@@ -198,7 +202,7 @@ const Team = () => {
               <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => editUserId && handleEditRole(editUserId, editRole)}>
+              <Button onClick={() => editUserId && handleEditRole(editUserId, editRole as 'admin' | 'member' | 'viewer')}>
                 Save Changes
               </Button>
             </DialogFooter>
@@ -269,7 +273,7 @@ const Team = () => {
                     <div>
                       <div className="font-medium text-foreground flex items-center gap-2">
                         {user.name}
-                        {user.id === currentUser.id && (
+                        {currentUser && user.id === currentUser.id && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                             You
                           </Badge>

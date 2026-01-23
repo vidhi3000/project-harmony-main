@@ -47,8 +47,8 @@ const Dashboard = () => {
   ];
 
   return (
-    <AppLayout 
-      title={`Welcome back, ${currentUser.name.split(' ')[0]}`}
+    <AppLayout
+      title={`Welcome back, ${currentUser?.name?.split(' ')[0] || 'User'}`}
       subtitle="Here's what's happening with your projects today."
     >
       {/* Stats Grid */}

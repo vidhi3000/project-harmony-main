@@ -13,8 +13,8 @@ import { Save, User } from 'lucide-react';
 
 const Settings = () => {
   const { currentUser, updateCurrentUser } = useAppStore();
-  const [name, setName] = useState(currentUser.name);
-  const [email, setEmail] = useState(currentUser.email);
+  const [name, setName] = useState(currentUser?.name || '');
+  const [email, setEmail] = useState(currentUser?.email || '');
   const [timezone, setTimezone] = useState(currentUser.timezone || 'utc-8');
 
   const handleSaveProfile = () => {
@@ -24,6 +24,20 @@ const Settings = () => {
     // For now, just show an alert
     alert(`Profile saved with timezone: ${timezone}`);
   };
+
+  if (!currentUser) {
+    return (
+      <AppLayout title="Settings" subtitle="Manage your account settings and preferences">
+        <div className="max-w-4xl space-y-6">
+          <Card>
+            <CardContent className="flex items-center justify-center py-8">
+              <p className="text-muted-foreground">Loading user data...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout title="Settings" subtitle="Manage your account settings and preferences">

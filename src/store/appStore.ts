@@ -6,6 +6,8 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  role: string;
+  timezone?: string;
 }
 
 export interface Project {
@@ -64,11 +66,15 @@ export interface AppState {
   setSidebarOpen: (open: boolean) => void;
   setCurrentUser: (user: User | null) => void;
   setAuthenticated: (authenticated: boolean) => void;
+  updateCurrentUser: (updates: Partial<User>) => void;
   updateBoardSettings: (settings: Partial<BoardSettings>) => void;
   moveTask: (taskId: string, newStatus: TaskStatus) => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateTask: (id: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>) => void;
   deleteTask: (id: string) => void;
+  addUser: (user: Omit<User, 'id'>) => void;
+  updateUser: (id: string, updates: Partial<User>) => void;
+  removeUser: (id: string) => void;
 }
 
 // Dummy data
@@ -78,18 +84,21 @@ export const dummyUsers: User[] = [
     name: 'John Doe',
     email: 'john@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+    role: 'admin',
   },
   {
     id: '2',
     name: 'Jane Smith',
     email: 'jane@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane',
+    role: 'member',
   },
   {
     id: '3',
     name: 'Bob Johnson',
     email: 'bob@example.com',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
+    role: 'member',
   },
 ];
 
@@ -173,8 +182,8 @@ export const dummyNotifications: Notification[] = [
 ];
 
 export const useAppStore = create<AppState>((set) => ({
-  currentUser: dummyUsers[0],
-  isAuthenticated: true,
+  currentUser: null,
+  isAuthenticated: false,
   theme: 'dark',
   sidebarOpen: true,
   users: dummyUsers,
@@ -190,6 +199,9 @@ export const useAppStore = create<AppState>((set) => ({
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setCurrentUser: (user) => set({ currentUser: user }),
   setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
+  updateCurrentUser: (updates) => set((state) => ({
+    currentUser: state.currentUser ? { ...state.currentUser, ...updates } : null,
+  })),
   updateBoardSettings: (settings) => set((state) => ({
     boardSettings: { ...state.boardSettings, ...settings },
   })),
@@ -217,5 +229,21 @@ export const useAppStore = create<AppState>((set) => ({
   })),
   deleteTask: (id) => set((state) => ({
     tasks: state.tasks.filter(task => task.id !== id),
+  })),
+  addUser: (user) => set((state) => ({
+    users: [...state.users, {
+      ...user,
+      id: Date.now().toString(),
+    }],
+  })),
+  updateUser: (id, updates) => set((state) => ({
+    users: state.users.map(user =>
+      user.id === id
+        ? { ...user, ...updates }
+        : user
+    ),
+  })),
+  removeUser: (id) => set((state) => ({
+    users: state.users.filter(user => user.id !== id),
   })),
 }));
