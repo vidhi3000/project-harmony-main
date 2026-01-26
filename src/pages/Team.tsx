@@ -317,7 +317,7 @@ const Team = () => {
                       <DropdownMenuItem onClick={() => openEditDialog(user)}>
                         <Edit className="h-4 w-4 mr-2" /> Edit Role
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => window.open(`mailto:${user.email}`)}>
                         <Mail className="h-4 w-4 mr-2" /> Send Message
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
