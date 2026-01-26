@@ -57,7 +57,18 @@ const Auth = () => {
           return;
         }
 
-        // Sign up (assuming email confirmations are disabled in Supabase for development)
+        // Password strength validation
+        if (password.length < 6) {
+          toast({
+            title: 'Weak password',
+            description: 'Password must be at least 6 characters long.',
+            variant: 'destructive',
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Sign up (email confirmations are enabled in Supabase)
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -84,7 +95,7 @@ const Auth = () => {
           console.log('Signup successful, data:', data);
           toast({
             title: 'Account created!',
-            description: 'Please check your email to verify your account before signing in.',
+            description: 'Welcome! You can now sign in.',
           });
           // Switch to login mode after signup
           setIsLogin(true);
