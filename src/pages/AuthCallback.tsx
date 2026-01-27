@@ -1,13 +1,40 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, RefreshCw, ArrowLeft } from "lucide-react";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-   const { data: listener } = supabase.auth.onAuthStateChange(
+    // Check for error parameters in URL
+    const errorParam = searchParams.get('error');
+    const errorCode = searchParams.get('error_code');
+    const errorDescription = searchParams.get('error_description');
+
+    if (errorParam) {
+      let errorMessage = 'Authentication failed.';
+
+      if (errorCode === 'otp_expired') {
+        errorMessage = 'The email link has expired. Please request a new one.';
+      } else if (errorDescription) {
+        errorMessage = errorDescription.replace(/\+/g, ' ');
+      }
+
+      setError(errorMessage);
+      setIsLoading(false);
+      return;
+    }
+
+    // Listen for auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        setIsLoading(false);
         if (event === "SIGNED_IN" && session) {
           navigate("/dashboard", { replace: true });
         }
@@ -15,9 +42,72 @@ const AuthCallback = () => {
     );
 
     return () => listener.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
-  return <p>Confirming email...</p>;
+  const handleRetry = () => {
+    navigate('/auth');
+  };
+
+  const handleBackToAuth = () => {
+    navigate('/auth');
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="w-full max-w-md space-y-6">
+          <div className="flex items-center gap-3 justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-glow">
+              <span className="text-2xl font-bold text-primary-foreground">F</span>
+            </div>
+            <span className="text-2xl font-bold text-foreground">FlowBoard</span>
+          </div>
+
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Authentication Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+
+          <div className="space-y-3">
+            <Button onClick={handleRetry} className="w-full gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </Button>
+            <Button variant="outline" onClick={handleBackToAuth} className="w-full gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Sign In
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-md space-y-6 text-center">
+        <div className="flex items-center gap-3 justify-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-glow">
+            <span className="text-2xl font-bold text-primary-foreground">F</span>
+          </div>
+          <span className="text-2xl font-bold text-foreground">FlowBoard</span>
+        </div>
+
+        <div className="space-y-4">
+          <h1 className="text-2xl font-bold text-foreground">Confirming your email...</h1>
+          {isLoading && (
+            <div className="flex justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+          )}
+          <p className="text-muted-foreground">
+            Please wait while we verify your email address.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default AuthCallback;
