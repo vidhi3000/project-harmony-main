@@ -6,9 +6,15 @@ const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(() => {
-      navigate("/dashboard", { replace: true });
-    });
+   const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          navigate("/dashboard", { replace: true });
+        }
+      }
+    );
+
+    return () => listener.subscription.unsubscribe();
   }, [navigate]);
 
   return <p>Confirming email...</p>;
