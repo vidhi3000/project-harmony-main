@@ -12,10 +12,19 @@ const AuthCallback = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for error parameters in URL
-    const errorParam = searchParams.get('error');
-    const errorCode = searchParams.get('error_code');
-    const errorDescription = searchParams.get('error_description');
+    // Check for error parameters in URL (query params or hash params)
+    let errorParam = searchParams.get('error');
+    let errorCode = searchParams.get('error_code');
+    let errorDescription = searchParams.get('error_description');
+
+    // If no query params, check hash params (for URLs like /auth/callback#error=...)
+    if (!errorParam) {
+      const hash = window.location.hash.substring(1); // Remove the '#'
+      const hashParams = new URLSearchParams(hash);
+      errorParam = hashParams.get('error');
+      errorCode = hashParams.get('error_code');
+      errorDescription = hashParams.get('error_description');
+    }
 
     if (errorParam) {
       let errorMessage = 'Authentication failed.';
