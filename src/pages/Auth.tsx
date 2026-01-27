@@ -73,6 +73,7 @@ const Auth = () => {
           email,
           password,
           options: {
+               emailRedirectTo: "https://project-harmony-main.vercel.app", 
             data: {
               full_name: name,
             },
