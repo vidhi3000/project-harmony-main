@@ -12,17 +12,24 @@ const AuthCallback = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const processEmailLogin = async () => {
-    const { error } = await supabase.auth.exchangeCodeForSession(
-      window.location.href
-    );
+    try {
+      const { error } = await supabase.auth.exchangeCodeForSession(
+        window.location.href
+      );
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        setError(error.message);
+        setIsLoading(false);
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Auth callback error:', err);
+      setError('Failed to authenticate. Please try again or contact support.');
       setIsLoading(false);
       return false;
     }
-
-    return true;
   };
 
   const handleRetry = () => {
@@ -70,6 +77,7 @@ const AuthCallback = () => {
   // 🔥 THIS is what actually logs the user in
   processEmailLogin().then((success) => {
     if (success) {
+      setIsLoading(false);
       navigate("/dashboard", { replace: true });
     }
   });
