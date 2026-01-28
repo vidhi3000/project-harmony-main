@@ -1,22 +1,28 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw, ArrowLeft } from "lucide-react";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const processEmailLogin = async () => {
     try {
-      const { error } = await supabase.auth.exchangeCodeForSession(
-        window.location.href
-      );
+      // Get tokens from URL (query or hash)
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const access_token = urlParams.get("access_token") || hashParams.get("access_token");
+      const refresh_token = urlParams.get("refresh_token") || hashParams.get("refresh_token");
 
+      if (!access_token || !refresh_token) {
+        setError("No access or refresh token found. Please sign in again.");
+        setIsLoading(false);
+        return false;
+      }
+
+      // Set session in Supabase
+      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
       if (error) {
         setError(error.message);
         setIsLoading(false);
@@ -25,92 +31,33 @@ const AuthCallback = () => {
 
       return true;
     } catch (err) {
-      console.error('Auth callback error:', err);
-      setError('Failed to authenticate. Please try again or contact support.');
+      console.error("Auth callback error:", err);
+      setError("Failed to authenticate. Please try again.");
       setIsLoading(false);
       return false;
     }
   };
 
-  const handleRetry = () => {
-    setError(null);
-    setIsLoading(true);
+  useEffect(() => {
     processEmailLogin().then((success) => {
       if (success) {
         navigate("/dashboard", { replace: true });
       }
     });
-  };
-
-  const handleBackToAuth = () => {
-    navigate("/auth");
-  };
-
-  useEffect(() => {
-  // Check for error parameters in URL (query params or hash params)
-  let errorParam = searchParams.get("error");
-  let errorCode = searchParams.get("error_code");
-  let errorDescription = searchParams.get("error_description");
-
-  if (!errorParam) {
-    const hash = window.location.hash.substring(1);
-    const hashParams = new URLSearchParams(hash);
-    errorParam = hashParams.get("error");
-    errorCode = hashParams.get("error_code");
-    errorDescription = hashParams.get("error_description");
-  }
-
-  if (errorParam) {
-    let errorMessage = "Authentication failed.";
-
-    if (errorCode === "otp_expired") {
-      errorMessage = "The email link has expired. Please request a new one.";
-    } else if (errorDescription) {
-      errorMessage = errorDescription.replace(/\+/g, " ");
-    }
-
-    setError(errorMessage);
-    setIsLoading(false);
-    return;
-  }
-
-  // 🔥 THIS is what actually logs the user in
-  processEmailLogin().then((success) => {
-    if (success) {
-      setIsLoading(false);
-      navigate("/dashboard", { replace: true });
-    }
-  });
-}, [navigate, searchParams]);
-
+  }, [navigate]);
 
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-        <div className="w-full max-w-md space-y-6">
-          <div className="flex items-center gap-3 justify-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-glow">
-              <span className="text-2xl font-bold text-primary-foreground">F</span>
-            </div>
-            <span className="text-2xl font-bold text-foreground">FlowBoard</span>
-          </div>
-
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Authentication Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-
-          <div className="space-y-3">
-            <Button onClick={handleRetry} className="w-full gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Try Again
-            </Button>
-            <Button variant="outline" onClick={handleBackToAuth} className="w-full gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Sign In
-            </Button>
-          </div>
+        <div className="w-full max-w-md space-y-6 text-center">
+          <h1 className="text-2xl font-bold text-foreground">Authentication Error</h1>
+          <p className="text-muted-foreground">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 rounded bg-primary text-white"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
