@@ -11,55 +11,70 @@ const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check for error parameters in URL (query params or hash params)
-    let errorParam = searchParams.get('error');
-    let errorCode = searchParams.get('error_code');
-    let errorDescription = searchParams.get('error_description');
-
-    // If no query params, check hash params (for URLs like /auth/callback#error=...)
-    if (!errorParam) {
-      const hash = window.location.hash.substring(1); // Remove the '#'
-      const hashParams = new URLSearchParams(hash);
-      errorParam = hashParams.get('error');
-      errorCode = hashParams.get('error_code');
-      errorDescription = hashParams.get('error_description');
-    }
-
-    if (errorParam) {
-      let errorMessage = 'Authentication failed.';
-
-      if (errorCode === 'otp_expired') {
-        errorMessage = 'The email link has expired. Please request a new one.';
-      } else if (errorDescription) {
-        errorMessage = errorDescription.replace(/\+/g, ' ');
-      }
-
-      setError(errorMessage);
-      setIsLoading(false);
-      return;
-    }
-
-    // Listen for auth state changes
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setIsLoading(false);
-        if (event === "SIGNED_IN" && session) {
-          navigate("/dashboard", { replace: true });
-        }
-      }
+  const processEmailLogin = async () => {
+    const { error } = await supabase.auth.exchangeCodeForSession(
+      window.location.href
     );
 
-    return () => listener.subscription.unsubscribe();
-  }, [navigate, searchParams]);
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+      return false;
+    }
+
+    return true;
+  };
 
   const handleRetry = () => {
-    navigate('/auth');
+    setError(null);
+    setIsLoading(true);
+    processEmailLogin().then((success) => {
+      if (success) {
+        navigate("/dashboard", { replace: true });
+      }
+    });
   };
 
   const handleBackToAuth = () => {
-    navigate('/auth');
+    navigate("/auth");
   };
+
+  useEffect(() => {
+  // Check for error parameters in URL (query params or hash params)
+  let errorParam = searchParams.get("error");
+  let errorCode = searchParams.get("error_code");
+  let errorDescription = searchParams.get("error_description");
+
+  if (!errorParam) {
+    const hash = window.location.hash.substring(1);
+    const hashParams = new URLSearchParams(hash);
+    errorParam = hashParams.get("error");
+    errorCode = hashParams.get("error_code");
+    errorDescription = hashParams.get("error_description");
+  }
+
+  if (errorParam) {
+    let errorMessage = "Authentication failed.";
+
+    if (errorCode === "otp_expired") {
+      errorMessage = "The email link has expired. Please request a new one.";
+    } else if (errorDescription) {
+      errorMessage = errorDescription.replace(/\+/g, " ");
+    }
+
+    setError(errorMessage);
+    setIsLoading(false);
+    return;
+  }
+
+  // 🔥 THIS is what actually logs the user in
+  processEmailLogin().then((success) => {
+    if (success) {
+      navigate("/dashboard", { replace: true });
+    }
+  });
+}, [navigate, searchParams]);
+
 
   if (error) {
     return (
