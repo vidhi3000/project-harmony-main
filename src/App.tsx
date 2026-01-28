@@ -23,6 +23,7 @@ const AppContent = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/callback" element={<AuthCallback />} />
         
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/auth" element={<ProtectedRoute requireAuth={false}><Auth /></ProtectedRoute>} />

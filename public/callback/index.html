@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Redirecting…</title>
+    <script>
+      // Preserve search and hash when redirecting to the React route
+      (function() {
+        var search = window.location.search || '';
+        var hash = window.location.hash || '';
+        var target = '/auth/callback' + search + hash;
+        // Use replace to avoid creating history entry
+        window.location.replace(target);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to authentication callback…</p>
+  </body>
+</html>
