@@ -5,7 +5,7 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: "/",   // 🔥 THIS FIXES YOUR 404 ASSET ERRORS
+  base: "./",   // 🔥 THIS FIXES YOUR 404 ASSET ERRORS
 
   server: {
     host: "::",
