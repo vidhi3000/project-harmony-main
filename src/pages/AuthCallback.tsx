@@ -9,8 +9,7 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleAuth = async () => {
-      // Supabase auto-processes the email link tokens
-      const { data, error } = await supabase.auth.getSession();
+      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
 
       if (error) {
         setError(error.message);
@@ -18,12 +17,10 @@ const AuthCallback = () => {
         return;
       }
 
-      if (data.session) {
+      // small delay prevents race condition in some browsers
+      setTimeout(() => {
         navigate("/dashboard", { replace: true });
-      } else {
-        setError("Login session not found. Please sign in again.");
-        setIsLoading(false);
-      }
+      }, 100);
     };
 
     handleAuth();
@@ -36,7 +33,7 @@ const AuthCallback = () => {
           <h1 className="text-2xl font-bold text-foreground">Authentication Error</h1>
           <p className="text-muted-foreground">{error}</p>
           <button
-            onClick={() => (window.location.href = "/login")}
+            onClick={() => (window.location.href = "/auth")}
             className="mt-4 px-4 py-2 rounded bg-primary text-white"
           >
             Try Again
