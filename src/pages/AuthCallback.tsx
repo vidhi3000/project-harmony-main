@@ -7,43 +7,26 @@ const AuthCallback = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const processEmailLogin = async () => {
-    try {
-      // Get tokens from URL (query or hash)
-      const urlParams = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const access_token = urlParams.get("access_token") || hashParams.get("access_token");
-      const refresh_token = urlParams.get("refresh_token") || hashParams.get("refresh_token");
+  useEffect(() => {
+    const handleAuth = async () => {
+      // Supabase auto-processes the email link tokens
+      const { data, error } = await supabase.auth.getSession();
 
-      if (!access_token || !refresh_token) {
-        setError("No access or refresh token found. Please sign in again.");
-        setIsLoading(false);
-        return false;
-      }
-
-      // Set session in Supabase
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
       if (error) {
         setError(error.message);
         setIsLoading(false);
-        return false;
+        return;
       }
 
-      return true;
-    } catch (err) {
-      console.error("Auth callback error:", err);
-      setError("Failed to authenticate. Please try again.");
-      setIsLoading(false);
-      return false;
-    }
-  };
-
-  useEffect(() => {
-    processEmailLogin().then((success) => {
-      if (success) {
+      if (data.session) {
         navigate("/dashboard", { replace: true });
+      } else {
+        setError("Login session not found. Please sign in again.");
+        setIsLoading(false);
       }
-    });
+    };
+
+    handleAuth();
   }, [navigate]);
 
   if (error) {
@@ -53,7 +36,7 @@ const AuthCallback = () => {
           <h1 className="text-2xl font-bold text-foreground">Authentication Error</h1>
           <p className="text-muted-foreground">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => (window.location.href = "/login")}
             className="mt-4 px-4 py-2 rounded bg-primary text-white"
           >
             Try Again
