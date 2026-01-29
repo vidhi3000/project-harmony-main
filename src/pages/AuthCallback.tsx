@@ -9,22 +9,31 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleAuth = async () => {
-      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1)); 
+      const access_token = hashParams.get("access_token"); 
+      const refresh_token = hashParams.get("refresh_token"); 
+      if (access_token && refresh_token) {
+        const { error } = await supabase.auth.setSession({ access_token, refresh_token });
 
-      if (error) {
-        setError(error.message);
-        setIsLoading(false);
-        return;
-      }
+        if (error) {
+          setError(error.message);
+          setIsLoading(false);
+          return;
+        }
 
-      // small delay prevents race condition in some browsers
-      setTimeout(() => {
-        navigate("/dashboard", { replace: true });
-      }, 100);
+        // small delay prevents race condition in some browsers
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 100);
+      }else { setError("No tokens found in callback URL"); 
+        setIsLoading(false); }
     };
 
     handleAuth();
   }, [navigate]);
+
+  if (isLoading) { return ( <div className="min-h-screen flex items-center justify-center"> 
+  <p className="text-lg">Completing sign-in…</p> </div> ); }
 
   if (error) {
     return (
