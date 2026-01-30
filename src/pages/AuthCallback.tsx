@@ -1,32 +1,47 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { useAppStore } from "@/store/appStore";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAppStore();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Supabase automatically parses the hash fragment and updates the session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error("Error fetching session:", error.message);
-        setError(error.message);
-        setIsLoading(false);
-        return;
+    // Check for URL parameters indicating errors
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    const errorCode = urlParams.get('error_code');
+    const errorDescription = urlParams.get('error_description');
+
+    if (errorParam) {
+      let errorMessage = 'Authentication failed.';
+
+      if (errorCode === 'otp_expired') {
+        errorMessage = 'The email link has expired. Please request a new one.';
+      } else if (errorDescription) {
+        errorMessage = errorDescription.replace(/\+/g, ' ');
       }
 
-      if (session) {
-        // User is signed in, redirect to dashboard
+      setError(errorMessage);
+      setIsLoading(false);
+      return;
+    }
+
+    // Wait for authentication state to be determined by useAuth hook
+    // Supabase automatically handles the callback and updates the session
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
         navigate("/dashboard");
       } else {
-        console.error("No session found in callback");
-        setError("No session found");
+        // If still not authenticated after a delay, show loading
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
-  }, [navigate]);
+    }, 1000); // Give some time for auth state to update
+
+    return () => clearTimeout(timer);
+  }, [navigate, isAuthenticated]);
 
   if (error) {
     return (
