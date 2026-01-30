@@ -38,7 +38,7 @@ export default function AuthCallback() {
         // If still not authenticated after a delay, show loading
         setIsLoading(false);
       }
-    }, 1000); // Give some time for auth state to update
+    }, 3000); // Increased timeout to give more time for auth state to update
 
     return () => clearTimeout(timer);
   }, [navigate, isAuthenticated]);
