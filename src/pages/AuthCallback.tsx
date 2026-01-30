@@ -2,38 +2,31 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
-const AuthCallback = () => {
+export default function AuthCallback() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const handleAuth = async () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1)); 
-      const access_token = hashParams.get("access_token"); 
-      const refresh_token = hashParams.get("refresh_token"); 
-      if (access_token && refresh_token) {
-        const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+    // Supabase automatically parses the hash fragment and updates the session
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("Error fetching session:", error.message);
+        setError(error.message);
+        setIsLoading(false);
+        return;
+      }
 
-        if (error) {
-          setError(error.message);
-          setIsLoading(false);
-          return;
-        }
-
-        // small delay prevents race condition in some browsers
-        setTimeout(() => {
-          navigate("/dashboard", { replace: true });
-        }, 100);
-      }else { setError("No tokens found in callback URL"); 
-        setIsLoading(false); }
-    };
-
-    handleAuth();
+      if (session) {
+        // User is signed in, redirect to dashboard
+        navigate("/dashboard");
+      } else {
+        console.error("No session found in callback");
+        setError("No session found");
+      }
+      setIsLoading(false);
+    });
   }, [navigate]);
-
-  if (isLoading) { return ( <div className="min-h-screen flex items-center justify-center"> 
-  <p className="text-lg">Completing sign-in…</p> </div> ); }
 
   if (error) {
     return (
@@ -77,5 +70,3 @@ const AuthCallback = () => {
     </div>
   );
 };
-
-export default AuthCallback;
