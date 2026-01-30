@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
+import { supabase } from "@/lib/supabase";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -29,19 +30,61 @@ export default function AuthCallback() {
       return;
     }
 
-    // Wait for authentication state to be determined by useAuth hook
-    // Supabase automatically handles the callback and updates the session
-    const timer = setTimeout(() => {
-      if (isAuthenticated) {
-        navigate("/dashboard");
-      } else {
-        // If still not authenticated after a delay, show loading
+    // Handle successful authentication callback
+    const handleAuthCallback = async () => {
+      try {
+        // Handle the auth callback by parsing the URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+
+        if (accessToken && refreshToken) {
+          // Set the session with the tokens from the URL
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (error) {
+            console.error('Error setting session:', error);
+            setError('Authentication failed. Please try again.');
+            setIsLoading(false);
+            return;
+          }
+
+          if (data.session) {
+            // User is authenticated, redirect to dashboard
+            navigate("/dashboard");
+          } else {
+            setError('Authentication failed. Please try again.');
+            setIsLoading(false);
+          }
+        } else {
+          // No tokens in URL, check if we already have a session
+          const { data, error } = await supabase.auth.getSession();
+          if (error) {
+            console.error('Error getting session:', error);
+            setError('Authentication failed. Please try again.');
+            setIsLoading(false);
+            return;
+          }
+
+          if (data.session) {
+            navigate("/dashboard");
+          } else {
+            setError('Authentication failed. Please try again.');
+            setIsLoading(false);
+          }
+        }
+      } catch (err) {
+        console.error('Unexpected error during auth callback:', err);
+        setError('An unexpected error occurred. Please try again.');
         setIsLoading(false);
       }
-    }, 3000); // Increased timeout to give more time for auth state to update
+    };
 
-    return () => clearTimeout(timer);
-  }, [navigate, isAuthenticated]);
+    handleAuthCallback();
+  }, [navigate]);
 
   if (error) {
     return (
