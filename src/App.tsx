@@ -12,11 +12,31 @@ import Team from "./pages/Team";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import AuthCallback from "./pages/AuthCallback";
-
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAppStore } from "@/store/appStore";
+ 
 const queryClient = new QueryClient();
+function AuthSync() {
+  useEffect(() => {
+    // Set initial session
+    supabase.auth.getSession().then(({ data }) => {
+      useAppStore.setState({ isAuthenticated: !!data.session });
+    });
+
+    // Listen for login/logout
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      useAppStore.setState({ isAuthenticated: !!session });
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  return null;
+}
 
 const AppContent = () => {
-  useAuth(); // Initialize auth
+   
 
   return (
     <BrowserRouter>
@@ -41,6 +61,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
+      <AuthSync />   {/* 🔥 THIS WAS MISSING */}
       <AppContent />
     </TooltipProvider>
   </QueryClientProvider>

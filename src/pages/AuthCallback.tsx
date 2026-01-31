@@ -5,87 +5,36 @@ import { supabase } from "@/lib/supabase";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAppStore();
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for URL parameters indicating errors
-    const urlParams = new URLSearchParams(window.location.search);
-    const errorParam = urlParams.get('error');
-    const errorCode = urlParams.get('error_code');
-    const errorDescription = urlParams.get('error_description');
+  const checkSession = async () => {
+    const { data, error } = await supabase.auth.getSession();
 
-    if (errorParam) {
-      let errorMessage = 'Authentication failed.';
-
-      if (errorCode === 'otp_expired') {
-        errorMessage = 'The email link has expired. Please request a new one.';
-      } else if (errorDescription) {
-        errorMessage = errorDescription.replace(/\+/g, ' ');
-      }
-
-      setError(errorMessage);
+    if (error) {
+      setError("Authentication failed. Please try again.");
       setIsLoading(false);
       return;
     }
 
-    // Handle successful authentication callback
-    const handleAuthCallback = async () => {
-      try {
-        // Handle the auth callback by parsing the URL hash
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
+    if (data.session) {
+      navigate("/dashboard");
+    } else {
+      setError("Authentication failed. Please try again.");
+      setIsLoading(false);
+    }
+  };
 
-        if (accessToken && refreshToken) {
-          // Set the session with the tokens from the URL
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+  checkSession();
+}, [navigate]);
 
-          if (error) {
-            console.error('Error setting session:', error);
-            setError('Authentication failed. Please try again.');
-            setIsLoading(false);
-            return;
-          }
+ if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Logging you in...</div>;
+  }
 
-          if (data.session) {
-            // User is authenticated, redirect to dashboard
-            navigate("/dashboard");
-          } else {
-            setError('Authentication failed. Please try again.');
-            setIsLoading(false);
-          }
-        } else {
-          // No tokens in URL, check if we already have a session
-          const { data, error } = await supabase.auth.getSession();
-          if (error) {
-            console.error('Error getting session:', error);
-            setError('Authentication failed. Please try again.');
-            setIsLoading(false);
-            return;
-          }
-
-          if (data.session) {
-            navigate("/dashboard");
-          } else {
-            setError('Authentication failed. Please try again.');
-            setIsLoading(false);
-          }
-        }
-      } catch (err) {
-        console.error('Unexpected error during auth callback:', err);
-        setError('An unexpected error occurred. Please try again.');
-        setIsLoading(false);
-      }
-    };
-
-    handleAuthCallback();
-  }, [navigate]);
-
+          
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
