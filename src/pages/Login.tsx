@@ -5,7 +5,7 @@ const Login = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "https://project-harmony-main.vercel.app/callback",
+        redirectTo: "https://project-harmony-main.vercel.app",
       },
     });
 
