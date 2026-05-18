@@ -17,11 +17,16 @@ export default function AuthCallback() {
 
      if (token_hash && type) {
       // ✅ NEW: verify the token from the email link
-      supabase.auth.verifyOtp({ token_hash, type }).then(({ error }) => {
-        if (!error) {
-          navigate("/dashboard", { replace: true });
+      supabase.auth.verifyOtp({ token_hash, type }).then(({ data, error }) => {
+        if (!error && data?.session) {
+          supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          }).then(() => {
+            navigate("/dashboard", { replace: true });
+          });
         } else {
-          setError(error.message);
+          setError(error?.message || "Verification failed. Plase try again.");
         }
       });
     } else {
@@ -34,7 +39,7 @@ export default function AuthCallback() {
         }
       });
     }
-  }, []);
+  }, [navigate]);
           
   if (error) {
     return (
