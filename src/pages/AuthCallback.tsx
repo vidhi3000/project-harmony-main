@@ -2,38 +2,39 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
 import { supabase } from "@/lib/supabase";
+import { type EmailOtpType } from "@supabase/supabase-js";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
 
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  
 
   useEffect(() => {
-  const checkSession = async () => {
-    const { data, error } = await supabase.auth.getSession();
+     const params = new URLSearchParams(window.location.search);
+    const token_hash = params.get("token_hash");
+    const type = params.get("type") as EmailOtpType | null;
 
-    if (error) {
-      setError("Authentication failed. Please try again.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (data.session) {
-      navigate("/dashboard");
+     if (token_hash && type) {
+      // ✅ NEW: verify the token from the email link
+      supabase.auth.verifyOtp({ token_hash, type }).then(({ error }) => {
+        if (!error) {
+          navigate("/dashboard", { replace: true });
+        } else {
+          setError(error.message);
+        }
+      });
     } else {
-      setError("Authentication failed. Please try again.");
-      setIsLoading(false);
+      // fallback: maybe session already exists (PKCE/implicit flow)
+      supabase.auth.getSession().then(({ data, error }) => {
+        if (error || !data.session) {
+          setError("No valid session found. The link may have expired.");
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
+      });
     }
-  };
-
-  checkSession();
-}, [navigate]);
-
- if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Logging you in...</div>;
-  }
-
+  }, []);
           
   if (error) {
     return (
@@ -64,11 +65,11 @@ export default function AuthCallback() {
 
         <div className="space-y-4">
           <h1 className="text-2xl font-bold text-foreground">Confirming your email...</h1>
-          {isLoading && (
+          
             <div className="flex justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             </div>
-          )}
+        
           <p className="text-muted-foreground">
             Please wait while we verify your email address.
           </p>
