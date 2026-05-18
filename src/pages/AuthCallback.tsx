@@ -15,23 +15,33 @@ export default function AuthCallback() {
     const token = params.get("token") ?? params.get("token_hash");
     const type = params.get("type") as EmailOtpType | null;
 
-     if (token && type) {
+    console.log('AuthCallback params:', { token, type, raw: window.location.href });
+
+    if (token && type) {
       // Verify the magic link / email OTP token using Supabase client-side auth.
       supabase.auth.verifyOtp({ token, type }).then(({ data, error }) => {
+        console.log('verifyOtp result:', { data, error });
         if (!error && data?.session) {
           navigate("/dashboard", { replace: true });
         } else {
           setError(error?.message || "Verification failed. Please try again.");
         }
+      }).catch((err) => {
+        console.error('verifyOtp threw:', err);
+        setError(String(err));
       });
     } else {
       // fallback: maybe the session is already present
       supabase.auth.getSession().then(({ data, error }) => {
+        console.log('getSession result:', { data, error });
         if (error || !data.session) {
           setError("No valid session found. The link may have expired.");
         } else {
           navigate("/dashboard", { replace: true });
         }
+      }).catch((err) => {
+        console.error('getSession threw:', err);
+        setError(String(err));
       });
     }
   }, [navigate]);
