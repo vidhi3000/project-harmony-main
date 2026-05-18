@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "./hooks/useAuth";
+
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -19,14 +19,58 @@ import { useAppStore } from "@/store/appStore";
 const queryClient = new QueryClient();
 function AuthSync() {
   useEffect(() => {
-    // Set initial session
-    supabase.auth.getSession().then(({ data }) => {
-      useAppStore.setState({ isAuthenticated: !!data.session });
-    });
+    const sync = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      useAppStore.setState({ isAuthenticated: !!sessionData.session });
 
-    // Listen for login/logout
+      const user = sessionData.session?.user;
+      useAppStore.setState({
+        currentUser: user
+          ? {
+              id: user.id,
+              name:
+                (user.user_metadata as Record<string, unknown>)?.full_name?.toString() ||
+                user.email?.split('@')[0] ||
+                'User',
+              email: user.email || '',
+              avatar:
+                (user.user_metadata as Record<string, unknown>)?.avatar_url?.toString() ||
+                undefined,
+              role: 'member',
+              timezone:
+                (user.user_metadata as Record<string, unknown>)?.timezone?.toString() ||
+                undefined,
+
+            }
+          : null,
+      });
+    };
+
+    sync();
+
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       useAppStore.setState({ isAuthenticated: !!session });
+      const user = session?.user;
+      useAppStore.setState({
+        currentUser: user
+          ? {
+              id: user.id,
+              name:
+                (user.user_metadata as Record<string, unknown>)?.full_name?.toString() ||
+                user.email?.split('@')[0] ||
+                'User',
+              email: user.email || '',
+              avatar:
+                (user.user_metadata as Record<string, unknown>)?.avatar_url?.toString() ||
+                undefined,
+              role: 'member',
+              timezone:
+                (user.user_metadata as Record<string, unknown>)?.timezone?.toString() ||
+                undefined,
+
+            }
+          : null,
+      });
     });
 
     return () => listener.subscription.unsubscribe();
@@ -34,6 +78,7 @@ function AuthSync() {
 
   return null;
 }
+
 
 const AppContent = () => {
    
