@@ -12,14 +12,29 @@ export default function AuthCallback() {
 
   useEffect(() => {
      const params = new URLSearchParams(window.location.search);
-    const token = params.get("token") ?? params.get("token_hash");
+    const token = params.get("token");
+    const tokenHash = params.get("token_hash");
     const type = params.get("type") as EmailOtpType | null;
+    const email = params.get("email") ?? undefined;
 
-    console.log('AuthCallback params:', { token, type, raw: window.location.href });
+    console.log('AuthCallback params:', { token, tokenHash, type, email, raw: window.location.href });
 
-    if (token && type) {
-      // Verify the magic link / email OTP token using Supabase client-side auth.
-      supabase.auth.verifyOtp({ token, type }).then(({ data, error }) => {
+    if (tokenHash && type) {
+      // Verify the token_hash flow
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type }).then(({ data, error }) => {
+        console.log('verifyOtp result:', { data, error });
+        if (!error && data?.session) {
+          navigate("/dashboard", { replace: true });
+        } else {
+          setError(error?.message || "Verification failed. Please try again.");
+        }
+      }).catch((err) => {
+        console.error('verifyOtp threw:', err);
+        setError(String(err));
+      });
+    } else if (token && type && email) {
+      // Verify the token + email flow
+      supabase.auth.verifyOtp({ token, type, email }).then(({ data, error }) => {
         console.log('verifyOtp result:', { data, error });
         if (!error && data?.session) {
           navigate("/dashboard", { replace: true });
