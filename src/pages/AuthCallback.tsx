@@ -12,25 +12,20 @@ export default function AuthCallback() {
 
   useEffect(() => {
      const params = new URLSearchParams(window.location.search);
-    const token_hash = params.get("token_hash");
+    const token = params.get("token") ?? params.get("token_hash");
     const type = params.get("type") as EmailOtpType | null;
 
-     if (token_hash && type) {
-      // ✅ NEW: verify the token from the email link
-      supabase.auth.verifyOtp({ token_hash, type }).then(({ data, error }) => {
+     if (token && type) {
+      // Verify the magic link / email OTP token using Supabase client-side auth.
+      supabase.auth.verifyOtp({ token, type }).then(({ data, error }) => {
         if (!error && data?.session) {
-          supabase.auth.setSession({
-            access_token: data.session.access_token,
-            refresh_token: data.session.refresh_token,
-          }).then(() => {
-            navigate("/dashboard", { replace: true });
-          });
+          navigate("/dashboard", { replace: true });
         } else {
-          setError(error?.message || "Verification failed. Plase try again.");
+          setError(error?.message || "Verification failed. Please try again.");
         }
       });
     } else {
-      // fallback: maybe session already exists (PKCE/implicit flow)
+      // fallback: maybe the session is already present
       supabase.auth.getSession().then(({ data, error }) => {
         if (error || !data.session) {
           setError("No valid session found. The link may have expired.");
